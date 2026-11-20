@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fahad Shaikh | PLC &amp; Industrial Automation Log</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="badge">Siemens TIA Portal V19 • S7-1500 • SCL • WinCC</div>
+      <h1>PLC &amp; Automation Field Log</h1>
+      <p class="subtitle">
+        Hands-on SCL state machines, WinCC HMI wiring, and shop-floor troubleshooting notes by
+        <strong>Fahad Ozair Shaikh</strong> (M.Sc. Embedded Systems, TU Chemnitz).
+      </p>
+      <div class="links">
+        <a href="https://github.com/shaikhfahad1708-dot" target="_blank" rel="noopener">GitHub Profile</a>
+        <a href="https://github.com/shaikhfahad1708-dot/s7-1500-batch-tank-scl" target="_blank" rel="noopener">S7-1500 Batch Tank Repo</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="controls">
+      <input type="text" id="searchInput" placeholder="Search SCL, WinCC, latches, timers..." />
+      <div class="filters" id="filterBar">
+        <button class="filter-btn active" data-tag="ALL">All</button>
+        <button class="filter-btn" data-tag="SCL">SCL</button>
+        <button class="filter-btn" data-tag="WinCC">WinCC</button>
+        <button class="filter-btn" data-tag="Shop-Floor">Shop-Floor</button>
+      </div>
+    </section>
+
+    <section id="postsContainer" class="posts-grid"></section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Personal engineering study log • Chemnitz, Germany • Built on GitHub Pages</p>
+    </div>
+  </footer>
+
+  <script src="posts.js"></script>
+  <script>
+    const container = document.getElementById("postsContainer");
+    const searchInput = document.getElementById("searchInput");
+    const filterButtons = document.querySelectorAll(".filter-btn");
+    let activeTag = "ALL";
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function renderPosts() {
+      const query = searchInput.value.toLowerCase().trim();
+      const filtered = PLC_POSTS.filter(post => {
+        const matchesTag = activeTag === "ALL" || post.tag === activeTag;
+        const matchesText =
+          post.title.toLowerCase().includes(query) ||
+          post.summary.toLowerCase().includes(query) ||
+          post.code.toLowerCase().includes(query);
+        return matchesTag && matchesText;
+      });
+
+      container.innerHTML = filtered.map((post, idx) => `
+        <article class="card">
+          <div class="card-meta">
+            <span class="tag">${escapeHtml(post.tag)}</span>
+            <span class="date">${escapeHtml(post.date)}</span>
+          </div>
+          <h2>${escapeHtml(post.title)}</h2>
+          <p class="summary">${escapeHtml(post.summary)}</p>
+          ${post.shopFloor ? `<div class="shop-box"><strong>Shop-Floor Translation:</strong> ${escapeHtml(post.shopFloor)}</div>` : ""}
+          ${post.code ? `
+            <div class="code-wrap">
+              <div class="code-header">
+                <span>${escapeHtml(post.codeLabel || "SCL / Notes")}</span>
+                <button class="copy-btn" onclick="copyCode(${idx}, this)">Copy</button>
+              </div>
+              <pre><code>${escapeHtml(post.code)}</code></pre>
+            </div>
+          ` : ""}
+        </article>
+      `).join("");
+
+      window._visiblePosts = filtered;
+    }
+
+    function copyCode(idx, btn) {
+      navigator.clipboard.writeText(window._visiblePosts[idx].code);
+      btn.textContent = "Copied!";
+      setTimeout(() => (btn.textContent = "Copy"), 1500);
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeTag = btn.dataset.tag;
+        renderPosts();
+      });
+    });
+
+    searchInput.addEventListener("input", renderPosts);
+    renderPosts();
+  </script>
+</body>
+</html>
